@@ -18,7 +18,7 @@ def _clip(n, min_value, max_value):
     return min(max(n, min_value), max_value)
 
 
-def map_size(level_of_detail):
+def get_map_size(level_of_detail):
     """
         Determines the map width and height (in pixels) at a specified level of detail.
         :param level_of_detail: Level of detail, from 1 (lowest detail) to 23 (highest detail).
@@ -35,7 +35,7 @@ def ground_resolution(latitude, level_of_detail):
         :return: The ground resolution, in meters per pixel.
     """
     latitude = _clip(latitude, MIN_LATITUDE, MAX_LATITUDE)
-    return math.cos(latitude * math.pi / 180) * 2 * math.pi * EARTH_RADIUS / map_size(level_of_detail)
+    return math.cos(latitude * math.pi / 180) * 2 * math.pi * EARTH_RADIUS / get_map_size(level_of_detail)
 
 
 def map_scale(latitude, level_of_detail, screen_dpi):
@@ -64,7 +64,7 @@ def geodetic2pixel(latitude, longitude, level_of_detail):
     sin_latitude = math.sin(latitude * math.pi / 180)
     y = 0.5 - math.log((1 + sin_latitude) / (1 - sin_latitude)) / (4 * math.pi)
 
-    map_size_ = map_size(level_of_detail)
+    map_size_ = get_map_size(level_of_detail)
     pixel_x = int(_clip(x * map_size_ + 0.5, 0, map_size_ - 1))
     pixel_y = int(_clip(y * map_size_ + 0.5, 0, map_size_ - 1))
     return pixel_x, pixel_y, level_of_detail
@@ -78,7 +78,7 @@ def pixel2geodetic(pixel_x, pixel_y, level_of_detail):
         :param level_of_detail: Level of detail, from 1 (lowest detail) to 23 (highest detail).
         :return: The latitude and longitude of the specified pixel in degrees.
     """
-    map_size_ = map_size(level_of_detail)
+    map_size_ = get_map_size(level_of_detail)
     x = (_clip(pixel_x, 0, map_size_ - 1) / map_size_) - 0.5
     y = 0.5 - (_clip(pixel_y, 0, map_size_ - 1) / map_size_)
 

@@ -2,6 +2,7 @@ import io
 import os
 import tempfile
 import zipfile
+from functools import cache
 
 import requests
 from PIL import Image
@@ -37,6 +38,7 @@ class CachedFetcher:
         if self.tmp:
             self.zip_file = tempfile.mkstemp(suffix='.zip')[1]
 
+    @cache
     def __call__(self, quad, g=5001, code='a'):
         file_name = f'{quad}-{g}.jpg'
         with zipfile.ZipFile(self.zip_file, 'a') as zp:
