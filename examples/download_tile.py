@@ -8,7 +8,7 @@ if __name__ == '__main__':
     # Floor the tile coordinates since tile coordinates are integers
     tile = tuple(map(math.floor, tile))
     # Convert the tile coordinates to quadkey
-    quad = tile2quad(*tile, 17)
+    quad = tile2quad(*tile)
     # Download the tile
     img = fetch_tile(quad, g=5001, code='a')
     # Show the tile
