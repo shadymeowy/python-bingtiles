@@ -1,17 +1,21 @@
 from setuptools import setup
 
 setup(
-    name='python-bing-stiles',
+    name='python-bing-tiles',
     version='0.0.1',
     description='Small library for accessing Bing Static Maps API',
     author='Tolga Demirdal',
-    url='https://github.com/shadymeowy/python-bing-stiles',
+    url='https://github.com/shadymeowy/python-bing-tiles',
     setup_requires=[],
-    install_requires=['requests'],
-    packages=['bingstiles'],
+    install_requires=['requests', 'Pillow'],
+    packages=['bingtiles'],
     entry_points={
+        'console_scripts': [
+            'bingtiles = bingtiles.__main__:main',              
+        ],          
     },
     extras_require={
+        'processbar': ['tqdm'],
     },
 )
  
