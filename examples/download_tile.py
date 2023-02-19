@@ -1,4 +1,4 @@
-from bingtiles import *
+from bingtiles import geodetic2tile, tile2quad, fetch_tile
 
 if __name__ == '__main__':
     # Specify the coordinates of the tile you want to download
@@ -6,7 +6,7 @@ if __name__ == '__main__':
     # Convert the coordinates to tile coordinates
     tile = geodetic2tile(*geo, 17)
     # Floor the tile coordinates since tile coordinates are integers
-    tile = tuple(map(math.floor, tile))
+    tile = tuple(map(int, tile))
     # Convert the tile coordinates to quadkey
     quad = tile2quad(*tile)
     # Download the tile

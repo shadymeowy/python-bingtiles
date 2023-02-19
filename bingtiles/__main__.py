@@ -1,6 +1,5 @@
 from bingtiles import *
 
-import sys
 import argparse
 
 

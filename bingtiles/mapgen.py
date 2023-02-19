@@ -2,7 +2,7 @@ import math
 import numpy as np
 from PIL import Image
 
-from .utils import geodetic2tile, tile2geodetic, tile2quad
+from .utils import geodetic2tile, tile2quad
 from .fetch import fetch_tile
 
 
