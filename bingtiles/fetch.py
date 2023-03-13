@@ -2,7 +2,12 @@ import io
 import os
 import tempfile
 import zipfile
-from functools import cache
+
+try:
+    from functools import cache
+except ImportError:
+    from functools import lru_cache
+    cache = lru_cache
 
 import requests
 from PIL import Image
