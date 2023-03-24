@@ -1,4 +1,4 @@
-from bingtiles import generate_map
+from bingtiles import generate_map, providers
 
 if __name__ == '__main__':
     # Specify corner coordinates of the map
@@ -9,7 +9,8 @@ if __name__ == '__main__':
     # Otherwise, use the default fetcher
     fetcher = None
     # Parameters for the map
-    params = dict(g=5001, code='a', lod=19)
+    provider = providers['bing_aerial']
+    params = dict(provider=provider, lod=18)
     # Generate the map
     img = generate_map(geo1, geo2, progress=True, fetcher=fetcher, **params)
     # Show the map

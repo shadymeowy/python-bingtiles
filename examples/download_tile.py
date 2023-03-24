@@ -1,4 +1,5 @@
 from bingtiles import geodetic2tile, tile2quad, fetch_tile
+from bingtiles.provider import provider_bing_hybrid
 
 if __name__ == '__main__':
     # Specify the coordinates of the tile you want to download
@@ -10,7 +11,7 @@ if __name__ == '__main__':
     # Convert the tile coordinates to quadkey
     quad = tile2quad(*tile)
     # Download the tile
-    img = fetch_tile(quad, g=5001, code='a')
+    img = fetch_tile(quad, provider=provider_bing_hybrid)
     # Show the tile
     img.show()
     # Save the tile

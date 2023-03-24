@@ -3,10 +3,11 @@ import numpy as np
 from PIL import Image
 
 from .utils import geodetic2tile, tile2quad
+from .provider import default_provider
 from .fetch import fetch_tile
 
 
-def generate_map(geo1, geo2, g=5001, code='a', lod=18, progress=False, fetcher=None):
+def generate_map(geo1, geo2, lod=18, provider=None, progress=False, fetcher=None):
     if fetcher is None:
         fetcher = fetch_tile
     tile1 = geodetic2tile(*geo1, lod)
@@ -27,7 +28,7 @@ def generate_map(geo1, geo2, g=5001, code='a', lod=18, progress=False, fetcher=N
     images = [list() for _ in range(tile_mn[0], tile_mx[0] + 1)]
     for x, y in it:
         quad = tile2quad(x, y, lod)
-        image = fetcher(quad, g=g, code=code)
+        image = fetcher(quad, provider=provider)
         images[x - tile_mn[0]].append(image)
     images = [np.concatenate(row, axis=0) for row in images]
     image = np.concatenate(images, axis=1)

@@ -1,4 +1,5 @@
 from bingtiles import *
+from bingtiles.provider import providers
 
 import argparse
 
@@ -11,18 +12,18 @@ def main():
     parser.add_argument('lat2', type=float, nargs='?')
     parser.add_argument('lon2', type=float, nargs='?')
     parser.add_argument('-l', '--lod', type=int, default=17)
-    parser.add_argument('-g', '--param-g', type=int, default=5001)
-    parser.add_argument('-c', '--code', default='a')
     parser.add_argument('-o', '--output', default=None)
     parser.add_argument('-p', '--progress', action='store_true')
     parser.add_argument('-z', '--cache-file', default=None)
+    parser.add_argument('-t', '--tile-provider', choices=providers.keys(), default='bing_hybrid')
     args = parser.parse_args()
-    fetcher = CachedFetcher(args.cache_file)
+    provider = providers[args.tile_provider]
+    fetcher = CachedFetcher(args.cache_file, provider)
     if args.command == 'tile':
         tile = geodetic2tile(args.lat, args.lon, args.lod)
         tile = tuple(map(math.floor, tile))
         quad = tile2quad(*tile, args.lod)
-        img = fetcher(quad, g=args.param_g, code=args.code)
+        img = fetcher(quad)
         if args.output is None:
             img.show()
         else:
@@ -38,7 +39,7 @@ def main():
         else:
             lon2 = args.lon2
         geo2 = (lat2, lon2)
-        img = generate_map(geo1, geo2, g=args.param_g, code=args.code,
+        img = generate_map(geo1, geo2,
                            lod=args.lod, progress=args.progress, fetcher=fetcher)
         if args.output is None:
             img.show()

@@ -170,13 +170,13 @@ def quad2tile(quad_key):
     level_of_detail = len(quad_key)
     for i in range(level_of_detail, 0, -1):
         mask = 1 << (i - 1)
-        if quad_key[level_of_detail - i] == 0:
+        if quad_key[level_of_detail - i] == '0':
             pass
-        elif quad_key[level_of_detail - i] == 1:
+        elif quad_key[level_of_detail - i] == '1':
             tile_x |= mask
-        elif quad_key[level_of_detail - i] == 2:
+        elif quad_key[level_of_detail - i] == '2':
             tile_y |= mask
-        elif quad_key[level_of_detail - i] == 3:
+        elif quad_key[level_of_detail - i] == '3':
             tile_x |= mask
             tile_y |= mask
         else:

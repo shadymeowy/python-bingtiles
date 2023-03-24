@@ -2,6 +2,7 @@ import io
 import os
 import tempfile
 import zipfile
+import base64
 
 try:
     from functools import cache
@@ -12,22 +13,13 @@ except ImportError:
 import requests
 from PIL import Image
 
-
-def bing_url(quadkey, g=5001, code='a', subdomain=1, **kwargs):
-    if isinstance(subdomain, int):
-        subdomain = f't{subdomain}'
-    base = f'http://ecn.{subdomain}.tiles.virtualearth.net/tiles/{code}{quadkey}.jpeg'
-    kwargs['g'] = g
-    queries = []
-    for k, v in kwargs.items():
-        queries.append(f'{k}={v}')
-    if queries:
-        base += '?' + '&'.join(queries)
-    return base
+from .provider import default_provider
 
 
-def fetch_tile(quad, g=5001, code='a'):
-    url = bing_url(quad, g=g, code=code)
+def fetch_tile(quad, provider=None):
+    if provider is None:
+        provider = default_provider
+    url = provider(quad)
     r = requests.get(url)
     if r.status_code != 200:
         raise ValueError(f'Failed to download tile {quad} from {url}')
@@ -37,18 +29,23 @@ def fetch_tile(quad, g=5001, code='a'):
 
 
 class CachedFetcher:
-    def __init__(self, zip_file=None):
+    def __init__(self, zip_file=None, provider=None):
         self.zip_file = zip_file
         self.tmp = zip_file is None
         if self.tmp:
             self.zip_file = tempfile.mkstemp(suffix='.zip')[1]
+        if provider is None:
+            provider = default_provider
+        self.provider = provider
 
     @cache
-    def __call__(self, quad, g=5001, code='a'):
-        file_name = f'{quad}-{g}.jpg'
+    def __call__(self, quad, provider=None):
+        if provider is None:
+            provider = self.provider
+        url = provider(quad)
+        file_name = base64.b64encode(url.encode()).decode()
         with zipfile.ZipFile(self.zip_file, 'a') as zp:
             if file_name not in zp.namelist():
-                url = bing_url(quad, g=g, code=code)
                 r = requests.get(url)
                 if r.status_code != 200:
                     raise ValueError(f'Failed to download tile {quad} from {url}')
@@ -63,8 +60,10 @@ class CachedFetcher:
                     image = Image.open(byts)
                     return image
 
-    def fetch(self, quad, g=5001, code='a'):
-        return self(quad, g=g, code=code)
+    def fetch(self, quad, provider=None):
+        if provider is None:
+            provider = self.provider
+        return self(quad, provider)
 
     def close(self):
         if self.tmp and os.path.exists(self.zip_file):
