@@ -1,7 +1,6 @@
 import io
 import os
 import tempfile
-import zipfile
 import base64
 
 try:
@@ -29,11 +28,14 @@ def fetch_tile(pos, provider=None):
 
 
 class CachedFetcher:
-    def __init__(self, zip_file=None, provider=None):
-        self.zip_file = zip_file
-        self.tmp = zip_file is None
+    def __init__(self, cache_path=None, provider=None):
+        self.cache_path = cache_path
+        self.tmp = cache_path is None
         if self.tmp:
-            self.zip_file = tempfile.mkstemp(suffix='.zip')[1]
+            self.cache_path = tempfile.mkdtemp()
+        else:
+            if not os.path.exists(self.cache_path):
+                os.makedirs(self.cache_path)
         if provider is None:
             provider = default_provider
         self.provider = provider
@@ -43,22 +45,23 @@ class CachedFetcher:
         if provider is None:
             provider = self.provider
         url = provider(pos)
-        file_name = base64.b64encode(url.encode()).decode()
-        with zipfile.ZipFile(self.zip_file, 'a') as zp:
-            if file_name not in zp.namelist():
-                r = requests.get(url)
-                if r.status_code != 200:
-                    raise ValueError(f'Failed to download tile {x},{y},{z} from {url}')
-                with zp.open(file_name, 'w') as f:
-                    f.write(r.content)
-                byts = io.BytesIO(r.content)
+        file_name = base64.b32hexencode(url.encode('utf-8')).decode('utf-8')
+        file_path = os.path.join(self.cache_path, file_name)
+        if not os.path.exists(file_path):
+            r = requests.get(url)
+            if r.status_code != 200:
+                x, y, z = pos
+                raise ValueError(f'Failed to download tile {x},{y},{z} from {url}')
+            with open(file_path, 'wb') as f:
+                f.write(r.content)
+            byts = io.BytesIO(r.content)
+            image = Image.open(byts)
+            return image
+        else:
+            with open(file_path, 'rb') as f:
+                byts = io.BytesIO(f.read())
                 image = Image.open(byts)
                 return image
-            else:
-                with zp.open(file_name, 'r') as f:
-                    byts = io.BytesIO(f.read())
-                    image = Image.open(byts)
-                    return image
 
     def fetch(self, pos, provider=None):
         if provider is None:
@@ -66,8 +69,8 @@ class CachedFetcher:
         return self(pos, provider)
 
     def close(self):
-        if self.tmp and os.path.exists(self.zip_file):
-            os.remove(self.zip_file)
+        if self.tmp and os.path.exists(self.cache_path):
+            os.rmdir(self.cache_path)
 
     def __del__(self):
         self.close()
