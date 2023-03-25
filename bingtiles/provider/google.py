@@ -87,6 +87,7 @@ def section_get(x, y):
 
 provider_google_map = types['map'].tile_url_get
 provider_google_satellite = types['satellite'].tile_url_get
+provider_google_satellite2 = types['satellite2'].tile_url_get
 provider_google_labels = types['labels'].tile_url_get
 provider_google_terrain = types['terrain'].tile_url_get
 provider_google_hybrid = types['hybrid'].tile_url_get
@@ -94,6 +95,7 @@ provider_google_hybrid = types['hybrid'].tile_url_get
 providers = {
     'google_map': provider_google_map,
     'google_satellite': provider_google_satellite,
+    'google_satellite2': provider_google_satellite2,
     'google_labels': provider_google_labels,
     'google_terrain': provider_google_terrain,
     'google_hybrid': provider_google_hybrid,
