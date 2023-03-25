@@ -1,6 +1,9 @@
 from ..utils import tile2quad, get_server_num
 
 
+BING_DEFAULT_VERSION = '5001'
+
+
 def provider_bing_base(pos, type, **kwargs):
     x, y, z = pos
     quadkey = tile2quad(x, y, z)
@@ -8,7 +11,7 @@ def provider_bing_base(pos, type, **kwargs):
     if isinstance(subdomain, int):
         subdomain = f't{subdomain}'
     url = f'http://ecn.{subdomain}.tiles.virtualearth.net/tiles/{type}{quadkey}.jpeg'
-    kwargs['g'] = 5001
+    kwargs['g'] = BING_DEFAULT_VERSION
     queries = []
     for k, v in kwargs.items():
         queries.append(f'{k}={v}')
