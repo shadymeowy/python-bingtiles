@@ -24,10 +24,10 @@ def generate_map(geo1, geo2, lod=18, provider=None, progress=False, fetcher=None
         it = tqdm(tiles)
     else:
         it = iter(tiles)
+    tiles = [(x, fetcher((x, y, lod), provider=provider)) for x, y in it]
     images = [list() for _ in range(tile_mn[0], tile_mx[0] + 1)]
-    for x, y in it:
-        pos = x, y, lod
-        image = fetcher(pos, provider=provider)
+    for tile in tiles:
+        x, image = tile
         images[x - tile_mn[0]].append(image)
     images = [np.concatenate(row, axis=0) for row in images]
     image = np.concatenate(images, axis=1)
