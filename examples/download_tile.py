@@ -8,11 +8,10 @@ if __name__ == '__main__':
     tile = geodetic2tile(*geo, 17)
     # Floor the tile coordinates since tile coordinates are integers
     tile = tuple(map(int, tile))
-    # Convert the tile coordinates to quadkey
-    quad = tile2quad(*tile)
     # Download the tile
-    img = fetch_tile(quad, provider=provider_bing_hybrid)
+    img = fetch_tile(tile, provider=provider_bing_hybrid)
     # Show the tile
     img.show()
     # Save the tile
-    img.save(f'tile-{quad}.png')
+    x, y, z = tile
+    img.save(f'tile-{x}-{y}-{z}.png')

@@ -6,7 +6,7 @@ try:
 except ImportError:
     from functools import lru_cache as cache
 
-from ..utils import quad2tile, get_server_num
+from ..utils import get_server_num
 
 re_map = re.compile(r'"*https?:\/\/mt\D?\d..*\/vt\?lyrs=(m@\d*)')
 re_satellite = re.compile(r'"*https?:\/\/khm\D?\d.googleapis.com\/kh\?v=(\d*)')
@@ -37,8 +37,8 @@ class GoogleMapType:
             match = match.group(1)
             self.version = match
 
-    def tile_url_get(self, quadkey):
-        x, y, z = quad2tile(quadkey)
+    def tile_url_get(self, pos):
+        x, y, z = pos
         sec1, sec2 = section_get(x, y)
         num = get_server_num(x, y, 4)
         url = self.template.format(

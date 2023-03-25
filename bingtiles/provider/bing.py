@@ -1,8 +1,9 @@
-from ..utils import quad2tile, get_server_num
+from ..utils import tile2quad, get_server_num
 
 
-def provider_bing_base(quadkey, type, **kwargs):
-    x, y, z = quad2tile(quadkey)
+def provider_bing_base(pos, type, **kwargs):
+    x, y, z = pos
+    quadkey = tile2quad(x, y, z)
     subdomain = get_server_num(x, y, 4)
     if isinstance(subdomain, int):
         subdomain = f't{subdomain}'
@@ -16,20 +17,20 @@ def provider_bing_base(quadkey, type, **kwargs):
     return url
 
 
-def provider_bing_aerial(quadkey, **kwargs):
-    return provider_bing_base(quadkey, type='a', **kwargs)
+def provider_bing_aerial(pos, **kwargs):
+    return provider_bing_base(pos, type='a', **kwargs)
 
 
-def provider_bing_road(quadkey, **kwargs):
-    return provider_bing_base(quadkey, type='r', **kwargs)
+def provider_bing_road(pos, **kwargs):
+    return provider_bing_base(pos, type='r', **kwargs)
 
 
-def provider_bing_terrain(quadkey, **kwargs):
-    return provider_bing_base(quadkey, type='t', **kwargs)
+def provider_bing_terrain(pos, **kwargs):
+    return provider_bing_base(pos, type='t', **kwargs)
 
 
-def provider_bing_hybrid(quadkey, **kwargs):
-    return provider_bing_base(quadkey, type='h', **kwargs)
+def provider_bing_hybrid(pos, **kwargs):
+    return provider_bing_base(pos, type='h', **kwargs)
 
 
 providers = {
