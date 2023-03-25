@@ -1,4 +1,9 @@
-def provider_bing_base(quadkey, type, subdomain=1, **kwargs):
+from ..utils import quad2tile, get_server_num
+
+
+def provider_bing_base(quadkey, type, **kwargs):
+    x, y, z = quad2tile(quadkey)
+    subdomain = get_server_num(x, y, 4)
     if isinstance(subdomain, int):
         subdomain = f't{subdomain}'
     url = f'http://ecn.{subdomain}.tiles.virtualearth.net/tiles/{type}{quadkey}.jpeg'

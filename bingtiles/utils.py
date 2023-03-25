@@ -182,3 +182,14 @@ def quad2tile(quad_key):
         else:
             raise Exception('Invalid QuadKey digit sequence.')
     return tile_x, tile_y, level_of_detail
+
+
+def get_server_num(tile_x, tile_y, max_server_num=4):
+    """
+        Returns a server number for a given tile.
+        :param tile_x: Tile X coordinate.
+        :param tile_y: Tile Y coordinate.
+        :param level_of_detail: Level of detail, from 1 (lowest detail) to 23 (highest detail).
+        :return: A server number.
+    """
+    return (tile_x + 2 * tile_y) % max_server_num
