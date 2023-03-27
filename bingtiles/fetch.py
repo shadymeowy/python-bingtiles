@@ -12,7 +12,7 @@ except ImportError:
 import requests
 from PIL import Image
 
-from .provider import default_provider
+from .provider import default_provider, providers
 
 
 def fetch_tile(pos, provider=None):
@@ -37,7 +37,7 @@ class CachedFetcher:
             if not os.path.exists(self.cache_path):
                 os.makedirs(self.cache_path)
         if provider is None:
-            provider = default_provider
+            provider = providers[default_provider]
         self.provider = provider
 
     @cache
