@@ -45,7 +45,7 @@ class CachedFetcher:
         if provider is None:
             provider = self.provider
         url = provider(pos)
-        file_name = base64.b32hexencode(url.encode('utf-8')).decode('utf-8')
+        file_name = base64.urlsafe_b64encode(url.encode('utf-8')).decode('utf-8')
         file_path = os.path.join(self.cache_path, file_name)
         if not os.path.exists(file_path):
             r = requests.get(url)
