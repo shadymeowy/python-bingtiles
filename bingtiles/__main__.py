@@ -22,8 +22,7 @@ def main():
     if args.command == 'tile':
         tile = geodetic2tile(args.lat, args.lon, args.lod)
         tile = tuple(map(math.floor, tile))
-        quad = tile2quad(*tile, args.lod)
-        img = fetcher(quad)
+        img = fetcher(tile)
         if args.output is None:
             img.show()
         else:
