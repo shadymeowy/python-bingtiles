@@ -3,12 +3,6 @@ import os
 import tempfile
 import base64
 
-try:
-    from functools import cache
-except ImportError:
-    from functools import lru_cache
-    cache = lru_cache
-
 import requests
 from PIL import Image
 
@@ -40,14 +34,18 @@ class CachedFetcher:
             provider = providers[default_provider]
         self.provider = provider
 
-    @cache
-    def __call__(self, pos, provider=None):
+    def __call__(self, pos, provider=None, only_cached=False):
         if provider is None:
             provider = self.provider
         url = provider(pos)
         file_name = base64.urlsafe_b64encode(url.encode('utf-8')).decode('utf-8')
         file_path = os.path.join(self.cache_path, file_name)
-        if not os.path.exists(file_path):
+        if os.path.exists(file_path):
+            with open(file_path, 'rb') as f:
+                byts = io.BytesIO(f.read())
+                image = Image.open(byts)
+                return image
+        elif not only_cached:
             r = requests.get(url)
             if r.status_code != 200:
                 x, y, z = pos
@@ -58,15 +56,12 @@ class CachedFetcher:
             image = Image.open(byts)
             return image
         else:
-            with open(file_path, 'rb') as f:
-                byts = io.BytesIO(f.read())
-                image = Image.open(byts)
-                return image
+            return None
 
-    def fetch(self, pos, provider=None):
+    def fetch(self, pos, provider=None, only_cached=False):
         if provider is None:
             provider = self.provider
-        return self(pos, provider)
+        return self(pos, provider, only_cached)
 
     def close(self):
         if self.tmp and os.path.exists(self.cache_path):
