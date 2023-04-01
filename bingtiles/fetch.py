@@ -39,6 +39,7 @@ class CachedFetcher:
             provider = self.provider
         url = provider(pos)
         file_name = base64.urlsafe_b64encode(url.encode('utf-8')).decode('utf-8')
+        file_name += '.png'
         file_path = os.path.join(self.cache_path, file_name)
         if os.path.exists(file_path):
             with open(file_path, 'rb') as f:
