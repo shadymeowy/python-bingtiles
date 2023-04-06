@@ -13,10 +13,14 @@ def fetch_tile(pos, provider=None):
     if provider is None:
         provider = default_provider
     url = provider(pos)
-    r = requests.get(url)
-    if r.status_code != 200:
-        raise ValueError(f'Failed to download tile {pos} from {url}')
-    byts = io.BytesIO(r.content)
+    if os.path.exists(url):
+        with open(url, 'rb') as f:
+            byts = io.BytesIO(f.read())
+    else:
+        r = requests.get(url)
+        if r.status_code != 200:
+            raise ValueError(f'Failed to download tile {pos} from {url}')
+        byts = io.BytesIO(r.content)
     image = Image.open(byts)
     return image
 
@@ -47,14 +51,9 @@ class CachedFetcher:
                 image = Image.open(byts)
                 return image
         elif not only_cached:
-            r = requests.get(url)
-            if r.status_code != 200:
-                x, y, z = pos
-                raise ValueError(f'Failed to download tile {x},{y},{z} from {url}')
+            image = fetch_tile(pos, provider)
             with open(file_path, 'wb') as f:
-                f.write(r.content)
-            byts = io.BytesIO(r.content)
-            image = Image.open(byts)
+                image.save(f, format='png')
             return image
         else:
             return None
