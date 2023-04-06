@@ -65,8 +65,8 @@ def geodetic2pixel(latitude, longitude, level_of_detail):
     y = 0.5 - math.log((1 + sin_latitude) / (1 - sin_latitude)) / (4 * math.pi)
 
     map_size_ = get_map_size(level_of_detail)
-    pixel_x = int(_clip(x * map_size_ + 0.5, 0, map_size_ - 1))
-    pixel_y = int(_clip(y * map_size_ + 0.5, 0, map_size_ - 1))
+    pixel_x = _clip(x * map_size_ + 0.5, 0, map_size_ - 1)
+    pixel_y = _clip(y * map_size_ + 0.5, 0, map_size_ - 1)
     return pixel_x, pixel_y, level_of_detail
 
 
@@ -85,6 +85,24 @@ def pixel2geodetic(pixel_x, pixel_y, level_of_detail):
     latitude = 90 - 360 * math.atan(math.exp(-y * 2 * math.pi)) / math.pi
     longitude = 360 * x
     return latitude, longitude
+
+
+def pixel2pixel(pixel_x, pixel_y, level_of_detail, new_level_of_detail):
+    """
+        Converts pixel XY coordinates into tile XY coordinates of the tile containing the specified pixel.
+        :param pixel_x: Pixel X coordinate.
+        :param pixel_y: Pixel Y coordinate.
+        :param level_of_detail: Level of detail, from 1 (lowest detail) to 23 (highest detail).
+        :param new_level_of_detail: Level of detail, from 1 (lowest detail) to 23 (highest detail).
+        :return: The pixel coordinates in pixels.
+    """
+    map_size_ = get_map_size(level_of_detail)
+    new_map_size_ = get_map_size(new_level_of_detail)
+    x = (pixel_x - 0.5) / map_size_
+    y = (pixel_y - 0.5) / map_size_
+    new_pixel_x = _clip(x * new_map_size_ + 0.5, 0, new_map_size_ - 1)
+    new_pixel_y = _clip(y * new_map_size_ + 0.5, 0, new_map_size_ - 1)
+    return new_pixel_x, new_pixel_y, new_level_of_detail
 
 
 def pixel2tile(pixel_x, pixel_y, level_of_detail):
@@ -109,6 +127,20 @@ def tile2pixel(tile_x, tile_y, level_of_detail):
     pixel_x = tile_x * 256
     pixel_y = tile_y * 256
     return pixel_x, pixel_y, level_of_detail
+
+
+def tile2tile(tile_x, tile_y, level_of_detail, new_level_of_detail):
+    """
+        Converts tile XY coordinates into tile XY coordinates of the tile at a specified level of detail.
+        :param tile_x: Tile X coordinate.
+        :param tile_y: Tile Y coordinate.
+        :param level_of_detail: Level of detail, from 1 (lowest detail) to 23 (highest detail).
+        :param new_level_of_detail: Level of detail, from 1 (lowest detail) to 23 (highest detail).
+        :return: The tile X and Y coordinates.
+    """
+    pixel = tile2pixel(tile_x, tile_y, level_of_detail)
+    new_pixel = pixel2pixel(*pixel, new_level_of_detail)
+    return pixel2tile(*new_pixel)
 
 
 def tile2geodetic(tile_x, tile_y, level_of_detail):
