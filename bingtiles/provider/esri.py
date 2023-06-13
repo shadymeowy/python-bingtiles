@@ -3,7 +3,7 @@ from ..utils import quad2tile
 
 def provider_esri_base(pos, type='World_Imagery'):
     x, y, z = pos
-    url = f'https://server.arcgisonline.com/ArcGIS/rest/services/{type}/MapServer/tile/{x}/{y}/{z}'
+    url = f'https://server.arcgisonline.com/ArcGIS/rest/services/{type}/MapServer/tile/{z}/{y}/{x}'
     return url
 
 
