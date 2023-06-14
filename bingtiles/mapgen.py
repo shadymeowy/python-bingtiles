@@ -16,12 +16,12 @@ def generate_map(geo1, geo2, lod=18, provider=None, progress=False, parallel=Tru
     tile2 = geodetic2tile(*geo2, lod)
     tile_mn_f = min(tile1[0], tile2[0]), min(tile1[1], tile2[1])
     tile_mx_f = max(tile1[0], tile2[0]), max(tile1[1], tile2[1])
-    tile_mn = tuple(map(int, tile_mn_f))
-    tile_mx = tuple(map(int, tile_mx_f))
+    tile_mn = list(map(int, tile_mn_f))
+    tile_mx = list(map(int, tile_mx_f))
     tile_mn_frac = 256 * (tile_mn_f[0] - tile_mn[0]), 256 * (tile_mn_f[1] - tile_mn[1])
     tile_mx_frac = 256 * (tile_mx_f[0] - tile_mx[0]), 256 * (tile_mx_f[1] - tile_mx[1])
-    tile_mn_frac = tuple(map(round, tile_mn_frac))
-    tile_mx_frac = tuple(map(round, tile_mx_frac))
+    tile_mn_frac = list(map(round, tile_mn_frac))
+    tile_mx_frac = list(map(round, tile_mx_frac))
     poses = []
     for x in range(tile_mn[0], tile_mx[0] + 1):
         for y in range(tile_mn[1], tile_mx[1] + 1):
@@ -48,7 +48,15 @@ def generate_map(geo1, geo2, lod=18, provider=None, progress=False, parallel=Tru
         images[x - tile_mn[0]].append(image)
     images = [np.concatenate(row, axis=0) for row in images]
     image = np.concatenate(images, axis=1)
-    image_cropped = image[tile_mn_frac[1]:tile_mx_frac[1]-256, tile_mn_frac[0]:tile_mx_frac[0]-256]
+    if tile_mx_frac[0] != 256:
+        tile_mx_frac[0] -= 256
+    else:
+        tile_mx_frac[0] = None
+    if tile_mx_frac[1] != 256:
+        tile_mx_frac[1] -= 256
+    else:
+        tile_mx_frac[1] = None
+    image_cropped = image[tile_mn_frac[1]:tile_mx_frac[1], tile_mn_frac[0]:tile_mx_frac[0]]
     if not as_array:
         image_cropped = Image.fromarray(image_cropped)
     return image_cropped
