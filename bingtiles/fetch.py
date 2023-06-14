@@ -2,25 +2,35 @@ import io
 import os
 import tempfile
 import base64
+import functools
 
 import requests
 from PIL import Image
 
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
 from .provider import default_provider, providers
 
 
+@functools.lru_cache(maxsize=1024)
 def fetch_tile(pos, provider=None):
     if provider is None:
         provider = default_provider
     url = provider(pos)
     if os.path.exists(url):
-        with open(url, 'rb') as f:
-            byts = io.BytesIO(f.read())
-    else:
-        r = requests.get(url)
-        if r.status_code != 200:
-            raise ValueError(f'Failed to download tile {pos} from {url}')
-        byts = io.BytesIO(r.content)
+        try:
+            image = cv2.imread(url)
+            return image
+        except:
+            image = Image.open(url)
+            return image
+    r = requests.get(url)
+    if r.status_code != 200:
+        raise ValueError(f'Failed to download tile {pos} from {url}')
+    byts = io.BytesIO(r.content)
     image = Image.open(byts)
     return image
 
