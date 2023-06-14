@@ -3,13 +3,18 @@ import numpy as np
 from PIL import Image
 from multiprocessing.dummy import Pool as ThreadPool
 
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
 from .utils import geodetic2tile
 from .fetch import fetch_tile
 
 
 def calculate_coverage(geo1, geo2, lod=18):
-    tile1 = np.array(geodetic2tile(*geo1, lod), np.float64)
-    tile2 = np.array(geodetic2tile(*geo2, lod), np.float64)
+    tile1 = np.array(geodetic2tile(*geo1, lod)[:2], np.float64)
+    tile2 = np.array(geodetic2tile(*geo2, lod)[:2], np.float64)
     tile_mn_f = np.min([tile1, tile2], axis=0)
     tile_mx_f = np.max([tile1, tile2], axis=0)
     tile_mn = np.array(tile_mn_f, np.int32)
@@ -61,3 +66,25 @@ def generate_map(geo1, geo2, lod=18, provider=None, progress=False, parallel=Tru
     if not as_array:
         image_cropped = Image.fromarray(image_cropped)
     return image_cropped
+
+
+def split_map(image, geo1, geo2, lod=18, as_array=False):
+    if isinstance(image, Image.Image):
+        image = np.array(image).astype(np.uint8)
+    compound = calculate_coverage(geo1, geo2, lod)
+    poses, tile_size, tile_mn_frac, tile_mx_frac = compound
+    image_full_size = 256 * (tile_size + 1)
+    image_full_size = np.concatenate([image_full_size, [3]])
+    image_size = 256 * tile_size + tile_mx_frac - tile_mn_frac
+    if image_size != image.shape:
+        image = cv2.resize(image, tuple(image_size))
+    padded = np.zeros(image_full_size, dtype=np.uint8)
+    padded[tile_mn_frac[1]:tile_mn_frac[1] + image_size[1], tile_mn_frac[0]:tile_mn_frac[0] + image_size[0]] = image
+    images = []
+    for pos in poses:
+        x, y, _ = pos - poses[0]
+        image = padded[y * 256:(y + 1) * 256, x * 256:(x + 1) * 256]
+        if not as_array:
+            image = Image.fromarray(image)
+        images.append((pos, image))
+    return images
