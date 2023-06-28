@@ -39,7 +39,7 @@ def generate_map(geo1, geo2, lod=18, provider=None, progress=False, parallel=Tru
     poses, tile_size, tile_mn_frac, tile_mx_frac = calculate_coverage(geo1, geo2, lod)
 
     def func(pos):  # TODO: rewrite this
-        return (pos[0], fetcher(pos.tolist(), provider=provider))
+        return (pos[0], fetcher(tuple(pos.tolist()), provider=provider))
     if parallel:
         pool = ThreadPool()
         tiles = pool.imap(func, poses)
