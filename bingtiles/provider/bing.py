@@ -11,7 +11,8 @@ def provider_bing_base(pos, type, **kwargs):
     if isinstance(subdomain, int):
         subdomain = f't{subdomain}'
     url = f'http://ecn.{subdomain}.tiles.virtualearth.net/tiles/{type}{quadkey}.jpeg'
-    kwargs['g'] = BING_DEFAULT_VERSION
+    if 'g' not in kwargs:
+        kwargs['g'] = BING_DEFAULT_VERSION
     queries = []
     for k, v in kwargs.items():
         queries.append(f'{k}={v}')
