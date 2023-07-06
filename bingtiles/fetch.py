@@ -61,6 +61,7 @@ class CachedFetcher:
                 image = Image.open(byts)
                 return image
         elif not only_cached:
+            pos = tuple(pos)
             image = fetch_tile(pos, provider)
             with open(file_path, 'wb') as f:
                 image.save(f, format='png')
