@@ -40,10 +40,10 @@ def generate_map(geo1, geo2, lod=18, provider=None, progress=False, parallel=Tru
 
     if provider is None:
         def func(pos):
-            return (pos[0], fetcher(tuple(pos.tolist())))
+            return (pos[0], fetcher(tuple(pos.tolist()), as_array=True))
     else:
         def func(pos):
-            return (pos[0], fetcher(tuple(pos.tolist()), provider=provider))
+            return (pos[0], fetcher(tuple(pos.tolist()), provider=provider, as_array=True))
     
     if parallel:
         pool = ThreadPool()
