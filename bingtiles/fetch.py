@@ -74,8 +74,8 @@ class CachedFetcher:
             image = fetch_tile(pos, provider)
             with open(file_path, 'wb') as f:
                 image.save(f, format='png')
-            if not as_array:
-                image = Image.fromarray(image)
+            if as_array:
+                image = np.array(image)
             return image
         else:
             return None
