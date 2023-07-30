@@ -79,7 +79,10 @@ def split_map(image, geo1, geo2, lod=18, as_array=False):
     compound = calculate_coverage(geo1, geo2, lod)
     poses, tile_size, tile_mn_frac, tile_mx_frac = compound
     image_full_size = 256 * (tile_size + 1)
-    image_full_size = np.concatenate([image_full_size[::-1], [3]])
+    if len(image.shape) == 3:
+        image_full_size = np.concatenate([image_full_size[::-1], [3]])
+    else:
+        image_full_size = image_full_size[::-1]
     image_size = 256 * tile_size + tile_mx_frac - tile_mn_frac
     if not np.equal(image_size[::-1], image.shape[:2]).all():
         image = cv2.resize(image, tuple(image_size), interpolation=cv2.INTER_NEAREST)
