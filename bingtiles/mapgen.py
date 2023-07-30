@@ -2,6 +2,8 @@ import math
 import numpy as np
 from PIL import Image
 from multiprocessing.dummy import Pool as ThreadPool
+from functools import lru_cache
+from tqdm import tqdm
 
 try:
     import cv2
@@ -23,28 +25,31 @@ def calculate_coverage(geo1, geo2, lod=18):
     tile_mx_frac = 256 * (tile_mx_f - tile_mx)
     tile_mn_frac = np.round(tile_mn_frac).astype(np.int32)
     tile_mx_frac = np.round(tile_mx_frac).astype(np.int32)
+    return tile_mn, tile_mx, tile_mn_frac, tile_mx_frac
+
+
+def _tile_grid(tile_mn, tile_mx, lod):
     xs = np.arange(tile_mn[0], tile_mx[0] + 1, dtype=np.int32)
     ys = np.arange(tile_mn[1], tile_mx[1] + 1, dtype=np.int32)
     poses = np.array(np.meshgrid(xs, ys)).T.reshape(-1, 2)
     zs = lod * np.ones(len(poses), dtype=np.int32)
     poses = np.concatenate([poses, zs[:, None]], axis=1)
-    return poses, tile_mx - tile_mn, tile_mn_frac, tile_mx_frac
+    return poses
 
 
-def generate_map(geo1, geo2, lod=18, provider=None, progress=False, parallel=True, as_array=False, fetcher=None):
-    if fetcher is None:
-        fetcher = fetch_tile
-    if progress:
-        from tqdm import tqdm
-    poses, tile_size, tile_mn_frac, tile_mx_frac = calculate_coverage(geo1, geo2, lod)
-
+@lru_cache(maxsize=8)
+def _rough_gen(tile_mn, tile_mx, lod, provider, fetcher, parallel, progress):
     if provider is None:
         def func(pos):
             return (pos[0], fetcher(tuple(pos.tolist()), as_array=True))
     else:
         def func(pos):
             return (pos[0], fetcher(tuple(pos.tolist()), provider=provider, as_array=True))
-    
+
+    tile_mn = np.array(tile_mn, np.int32)
+    tile_mx = np.array(tile_mx, np.int32)
+    tile_size = tile_mx - tile_mn
+    poses = _tile_grid(tile_mn, tile_mx, lod)
     if parallel:
         pool = ThreadPool()
         tiles = pool.imap(func, poses)
@@ -59,11 +64,23 @@ def generate_map(geo1, geo2, lod=18, provider=None, progress=False, parallel=Tru
             poses = tqdm(poses)
         tiles = list(map(func, poses))
     images = [list() for _ in range(tile_size[0] + 1)]
+
     for tile in tiles:
         x, image = tile
         images[x - poses[0][0]].append(image)
+
     images = [np.concatenate(row, axis=0) for row in images]
     image = np.concatenate(images, axis=1)
+    return image
+
+
+def generate_map(geo1, geo2, lod=18, provider=None, progress=False, parallel=True, as_array=False, fetcher=None):
+    if fetcher is None:
+        fetcher = fetch_tile
+    tile_mn, tile_mx, tile_mn_frac, tile_mx_frac = calculate_coverage(geo1, geo2, lod)
+    tile_mn = tuple(map(int, tile_mn))
+    tile_mx = tuple(map(int, tile_mx))
+    image = _rough_gen(tile_mn, tile_mx, lod, provider, fetcher, parallel, progress)
     tile_mx_frac -= 256
     e0 = tile_mx_frac[0] if tile_mx_frac[0] != 0 else None
     e1 = tile_mx_frac[1] if tile_mx_frac[1] != 0 else None
@@ -77,7 +94,9 @@ def split_map(image, geo1, geo2, lod=18, as_array=False):
     if isinstance(image, Image.Image):
         image = np.array(image).astype(np.uint8)
     compound = calculate_coverage(geo1, geo2, lod)
-    poses, tile_size, tile_mn_frac, tile_mx_frac = compound
+    tile_mn, tile_mx, tile_mn_frac, tile_mx_frac = compound
+    poses = _tile_grid(tile_mn, tile_mx, lod)
+    tile_size = tile_mx - tile_mn
     image_full_size = 256 * (tile_size + 1)
     if len(image.shape) == 3:
         image_full_size = np.concatenate([image_full_size[::-1], [3]])
