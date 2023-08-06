@@ -105,7 +105,7 @@ def split_map(image, geo1, geo2, lod=18, as_array=False):
     image_size = 256 * tile_size + tile_mx_frac - tile_mn_frac
     if not np.equal(image_size[::-1], image.shape[:2]).all():
         image = cv2.resize(image, tuple(image_size), interpolation=cv2.INTER_NEAREST)
-    padded = np.zeros(image_full_size, dtype=np.uint8)
+    padded = np.zeros(image_full_size, dtype=image.dtype)
     tile_mx_frac -= 256
     e0 = tile_mx_frac[0] if tile_mx_frac[0] != 0 else None
     e1 = tile_mx_frac[1] if tile_mx_frac[1] != 0 else None
