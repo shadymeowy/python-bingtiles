@@ -14,12 +14,15 @@ from .fetch import fetch_tile
 
 
 class MapGenerator:
-    def __init__(self, provider=None, fetcher=None, progress=False, parallel=True):
+    def __init__(self, provider=None, fetcher=None, progress=False, parallel=True, multifetch=False):
         self.provider = provider
         self.fetcher = fetcher
         self.progress = progress
         self.parallel = parallel
-
+        self.multifetch = multifetch
+        self.pool = None
+        if self.multifetch and self.parallel:
+            raise ValueError("multifetch and parallel cannot be used together")
         if self.fetcher is None:
             self.fetcher = fetch_tile
         if self.parallel:
@@ -47,36 +50,48 @@ class MapGenerator:
     def _rough_gen(self, tile_mn, tile_mx, lod):
         tile_mn = np.array(tile_mn, np.int32)
         tile_mx = np.array(tile_mx, np.int32)
-        tile_size = tile_mx - tile_mn
+        map_size = tile_mx - tile_mn + 1
         poses = _tile_grid(tile_mn, tile_mx, lod)
+        tiles = self._multifetch(poses)
+        tiles = np.array(tiles)
+        tile_size = tiles.shape[1:]
+        if tiles.ndim == 3:
+            tiles = tiles.reshape(
+                map_size[0], map_size[1], tile_size[1], tile_size[0])
+            tiles = tiles.transpose(1, 2, 0, 3)
+            image = tiles.reshape(
+                map_size[1] * tile_size[1], map_size[0] * tile_size[0])
+        elif tiles.ndim == 4:
+            tiles = tiles.reshape(
+                map_size[0], map_size[1], tile_size[1], tile_size[0], tiles.shape[3])
+            tiles = tiles.transpose(1, 2, 0, 3, 4)
+            image = tiles.reshape(
+                map_size[1] * tile_size[1], map_size[0] * tile_size[0], tiles.shape[4])
+        return image
+
+    def _fetch(self, pos):
+        if self.provider is None:
+            return self.fetcher(tuple(pos.tolist()), as_array=True)
+        else:
+            return self.fetcher(tuple(pos.tolist()), provider=self.provider, as_array=True)
+
+    def _multifetch(self, poses):
         if self.parallel:
             tiles = self.pool.imap(self._fetch, poses)
             if self.progress:
                 tiles = list(tqdm(tiles, total=len(poses)))
             else:
                 tiles = list(tiles)
+        elif self.multifetch:
+            tiles = self.fetcher(poses, provider=self.provider, as_array=True)
         else:
             if self.progress:
                 poses = tqdm(poses)
             tiles = list(map(self._fetch, poses))
-        images = [list() for _ in range(tile_size[0] + 1)]
-
-        for tile in tiles:
-            x, image = tile
-            images[x - poses[0][0]].append(image)
-
-        images = [np.concatenate(row, axis=0) for row in images]
-        image = np.concatenate(images, axis=1)
-        return image
-
-    def _fetch(self, pos):
-        if self.provider is None:
-            return (pos[0], self.fetcher(tuple(pos.tolist()), as_array=True))
-        else:
-            return (pos[0], self.fetcher(tuple(pos.tolist()), provider=self.provider, as_array=True))
+        return tiles
 
     def close(self):
-        if self.parallel:
+        if self.parallel and self.pool:
             self.pool.close()
             self.pool.join()
 
