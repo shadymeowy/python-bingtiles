@@ -80,10 +80,10 @@ class CachedFetcher:
         else:
             return None
 
-    def fetch(self, pos, provider=None, only_cached=False):
+    def fetch(self, pos, provider=None, only_cached=False, as_array=False):
         if provider is None:
             provider = self.provider
-        return self(pos, provider, only_cached)
+        return self(pos, provider, only_cached, as_array)
 
     def close(self):
         if self.tmp and os.path.exists(self.cache_path):
@@ -96,6 +96,7 @@ class CachedFetcher:
             return image
         except:
             image = Image.open(path)
+            image = np.array(image)
             return image
 
     def __del__(self):
