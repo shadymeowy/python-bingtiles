@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bingtiles"
+version = "0.0.1"
+description = "Small library for accessing Bing Static Maps API and alike"
+authors = [{ name = "Tolga Demirdal" }]
+readme = "README.md"
+license = { file = "LICENSE" }
+dependencies = [
+    "requests",
+    "Pillow"
+]
+
+[project.urls]
+Homepage = "https://github.com/shadymeowy/python-drawing3d"
+Repository = "https://github.com/shadymeowy/python-drawing3d"
+
+[tool.setuptools]
+packages = ["bingtiles", "bingtiles.provider"]
+
+[project.entry-points."console_scripts"]
+bingtiles = "geofly.bingtiles.__main__:main"
